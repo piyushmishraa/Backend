@@ -1,10 +1,12 @@
 
 
-const asyncHandler=(fun)=>{(req,res,next)=>{
+const asyncHandler=(fun)=>{
+ return (req,res,next)=>{
     Promise.
     resolve(fun(req,res,next)).
     catch((err)=>{next(err)})
-}}
+}
+}
 
 
 // const asyncHandler=(fun)=>{async(req,res,next)=>{
@@ -18,3 +20,24 @@ const asyncHandler=(fun)=>{(req,res,next)=>{
         
 //     }
 // }}
+
+export default asyncHandler;
+
+
+
+// const wrapperFunc=(info,fun)=>{
+//     return ()=>{
+//         console.log(info);
+//         console.log("bitch");
+//         fun();
+//         console.log("ass");
+//     }
+// }
+
+// const wrappedFunc=()=>{
+//     console.log("hello");
+// }
+
+// const final=wrapperFunc("lund",wrappedFunc);
+
+// console.log(final);

@@ -17,5 +17,13 @@ app.use(express.urlencoded({extended:true,limit:"16kb"}));
 app.use(express.static("Public"));
 app.use(cookieParser());
 
+//importing routes
+
+import userRouter from "./routes/user.route.js";
+
+//abhi tak kisi route par jana hota tha to app.get krte the par qki hmlog express ke router ka user karre hain so app.use karenge
+
+app.use("/api/v1/user",userRouter)
+
 
 export default app;

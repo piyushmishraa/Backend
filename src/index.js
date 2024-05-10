@@ -10,8 +10,8 @@ connectDB()
 .then(
   ()=>{
     app.listen(process.env.PORT||8000,()=>{
-        `app is listening on ${process.env.PORT}`;
-    })
+        console.log(`app is listening on ${process.env.PORT}`);
+    });
   }
 )
 .catch(
