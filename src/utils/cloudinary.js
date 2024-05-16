@@ -2,9 +2,9 @@ import {v2 as cloudinary} from 'cloudinary';
 import fs from "fs"
 
 cloudinary.config({ 
-    cloud_name:dwl2hjsga , 
+    cloud_name:"dwl2hjsga", 
     api_key: process.env.CLOUDINARY_API_KEY, 
-    api_secret: CLOUDINARY_API_SECRET // Click 'View Credentials' below to copy your API secret
+    api_secret: process.env.CLOUDINARY_API_SECRET // Click 'View Credentials' below to copy your API secret
 });
 
 
