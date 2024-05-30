@@ -54,11 +54,13 @@ const userSchema=new mongoose.Schema({
 //it is a middleware "pre one",we want before "save"run this function also dont sue arrow function cause it doesnt have this object
 userSchema.pre("save", async function(next){
     if(!this.isModified("password")) return next();
-     this.username=bcrypt.hash(this.password,10);
- next();
+   this.password= await bcrypt.hash(this.password,10);
+    next();
 
 })
+ 
 
+//return karane par true ya false milega 
 userSchema.methods.isPasswordCorrect= async function(password){
   return await bcrypt.compare(password,this.password);
 }
