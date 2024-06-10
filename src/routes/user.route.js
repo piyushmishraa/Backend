@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/user.controller.js";
+import { loginUser, logotOutUser, registerUser } from "../controllers/user.controller.js";
 import { upload } from "../middleware/multer.middleware.js";
+import { verifyJWT } from "../middleware/auth.middleware.js";
 
 const router =Router();
 
@@ -8,10 +9,10 @@ const router =Router();
 router.route("/register").post(
     upload.fields([
         {
-            name:"avatar",//ye tumahri frontend ke fields ka naam hai
+            name:"avatar", //ye tumahri frontend ke fields ka naam hai
             maxCount:1
         },
-        {
+        {  
             name:"coverImage",
             maxCount:1
 
@@ -22,5 +23,11 @@ router.route("/register").post(
 );
 
 //yhn login ka bhi likh sakte hain
+
+router.route("/login").post(loginUser)
+
+//yhn par secured routes likhe jaenge
+
+router.route("/logout").post(verifyJWT,  logotOutUser)
 
 export default  router;

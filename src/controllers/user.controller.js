@@ -4,6 +4,30 @@ import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
+
+const generateAccessTokenAndRefreshToken=async(userID)=>{
+      try {
+         const user= await User.findById(userID);
+         const accessToken= await user.generateAccessToken();
+         const refreshToken=await user.generateRefreshToken();
+        
+         // refresh token save karare hain
+
+         //yhn par fill karae and
+
+         user.refreshToken=refreshToken;
+         //yhn par save kiya
+
+         await user.save({ validateBeforeSave:false })
+
+         return [{refreshToken},{accessToken}];
+         
+
+      } catch (error) {
+            throw new ApiError(401,"Something went wrong during generating tokens")
+      }
+
+}
 const registerUser=asyncHandler(async(req,res)=>{
       //get user details
       //validate fields
@@ -15,9 +39,12 @@ const registerUser=asyncHandler(async(req,res)=>{
       //remove password and refresh token from response
       //check if response is created or not 
       //send response to user 
+
+      //for getting the fileds from body using re.body
      const{username,fullname,email,password}= req.body;
      console.log(username,email);
-
+      
+     //validating if normal fields are present  or not
      if(fullname===""){
       throw new ApiError(400,"fullname is required")
      }
@@ -76,7 +103,89 @@ const registerUser=asyncHandler(async(req,res)=>{
 
 })
 
-export {registerUser}
+
+const loginUser= asyncHandler(async(req,res)=>{
+      //get user data from body
+      //username based or email based
+      //find the user
+      //password check
+      //access and refresh token
+      // send cookies
+
+      const{username,email,password}=req.body;
+       
+      if(!(username||email)){
+            throw new ApiError(404,"please enter email or password");
+      }
+
+      const user= await User.findOne({
+            $or:[{email},{username}]
+      });
+
+      if(!user){
+            throw new ApiError(404,"no user found")
+      }
+       
+        //yahan par user likha hai na ki User because ye method hamne banaya hai na ki mongodb ke mongoose hai 
+       const isValidPassword= await user.isPasswordCorrect(password);
+
+       if(!isValidPassword){
+            throw new ApiError(404,"Invalid user credentials");
+       };
+
+       
+
+      const {refreshToken,accessToken}= await generateAccessTokenAndRefreshToken(user._id);
+      //ab iss point pr database ke andar refresh token saved hai par vo hame nahi dena ar na password dena 
+      const loggedInUser= await User.findById(user._id).select(
+            " -password -refreshtoken " 
+      )
+      
+      const options={
+            httpOnly:true,
+            secure:true
+      }
+      return res.status(200).cookie("accessToken",accessToken,options)
+      .cookie("refreshToken",refreshToken,options)
+      .json(
+            new ApiResponse(
+                  200,
+                  {
+                        user:loggedInUser,accessToken,refreshToken
+                  },
+                  "user logged in successfully"
+            )
+      )
+
+})
+
+const logotOutUser=asyncHandler(async(req,res)=>{
+      User.findByIdAndUpdate(
+            req.user._id,
+            {
+                  $set:{
+                        refreshToken:undefined
+                  }
+            },
+            {
+                  new:true
+            }
+
+      )
+
+      const options={
+            httpOnly:true,
+            secure:true
+      }
+      
+      res.status(200)
+      .clearCookies("accessToken",options)
+      .clearCookies("refreshToken",options)
+      .json(
+            new ApiResponse("200",{},"User logged OUT")
+      )
+})
+export {registerUser,loginUser,logotOutUser}
 
 
 
