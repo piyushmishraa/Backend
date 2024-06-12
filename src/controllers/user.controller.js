@@ -8,8 +8,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 const generateAccessTokenAndRefreshToken=async(userID)=>{
       try {
          const user= await User.findById(userID);
-         const accessToken= await user.generateAccessToken();
-         const refreshToken=await user.generateRefreshToken();
+        
+         const accessToken=  user.generateAccessToken();
+         const refreshToken= user.generateRefreshToken();
         
          // refresh token save karare hain
 
@@ -18,9 +19,11 @@ const generateAccessTokenAndRefreshToken=async(userID)=>{
          user.refreshToken=refreshToken;
          //yhn par save kiya
 
-         await user.save({ validateBeforeSave:false })
 
-         return [{refreshToken},{accessToken}];
+         await user.save({ validateBeforeSave:false })
+         
+
+         return {refreshToken,accessToken};
          
 
       } catch (error) {
@@ -136,6 +139,7 @@ const loginUser= asyncHandler(async(req,res)=>{
        
 
       const {refreshToken,accessToken}= await generateAccessTokenAndRefreshToken(user._id);
+      console.log(refreshToken);
       //ab iss point pr database ke andar refresh token saved hai par vo hame nahi dena ar na password dena 
       const loggedInUser= await User.findById(user._id).select(
             " -password -refreshtoken " 
@@ -156,6 +160,7 @@ const loginUser= asyncHandler(async(req,res)=>{
                   "user logged in successfully"
             )
       )
+      
 
 })
 
@@ -179,8 +184,8 @@ const logotOutUser=asyncHandler(async(req,res)=>{
       }
       
       res.status(200)
-      .clearCookies("accessToken",options)
-      .clearCookies("refreshToken",options)
+      .clearCookie("accessToken",options)
+      .clearCookie("refreshToken",options)
       .json(
             new ApiResponse("200",{},"User logged OUT")
       )
