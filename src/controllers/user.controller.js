@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken"
 
 
 const generateAccessTokenAndRefreshToken=async(userID)=>{
@@ -189,8 +190,57 @@ const logotOutUser=asyncHandler(async(req,res)=>{
       .json(
             new ApiResponse("200",{},"User logged OUT")
       )
+});
+
+
+//hamlog ye refreshAccessToken isliye banare qki  jab user ka access token expire hojaega
+//to usko hamlog ek naya access token dedenge but verify karwake denge ...mtlb usse refreshtoken mangenge from cookies ..
+//usko compare karaenge apne database jo token hai usse. agar same hota hai to dedenge ..wrna nhi
+const refreshAcessToken= asyncHandler(async(req,res)=>{
+
+      const incomingrefreshtoken=req.cookies.refreshToken;
+      if (!incomingrefreshtoken) {
+            throw new   ApiError(401,"token  not found")
+      }
+      const decodedRefreshToken=jwt.verify(incomingrefreshtoken,process.env.REFRESH_TOKEN_SECRET);
+
+      if(!decodedRefreshToken){
+            throw new ApiError(401,"token not found");
+
+      }
+       
+      const user=User.findById(decodedRefreshToken._id) ;
+         
+      if(!user){
+            throw new ApiError(401,"refresh token  not found");
+      }
+        
+      if(incomingrefreshtoken !== user.refreshToken){
+            throw new ApiError(401,"WRONG TOKEN")
+      }
+        
+      const {accessToken,newrefreshToken}=generateAccessTokenAndRefreshToken(user._id);
+
+      const options={
+            httpOnly:true,
+            secure:true
+      }
+
+      res.status(200)
+      .cookie("accessToken",accessToken,options)
+      .cookie("refreshToken",newrefreshToken,options)
+      .json(
+            new ApiResponse(200,
+                  {refreshToken:newrefreshToken,accessToken},
+                  "token given successfully"
+            )
+      )
+
+    
+
+
 })
-export {registerUser,loginUser,logotOutUser}
+export {registerUser,loginUser,logotOutUser,refreshAcessToken}
 
 
 
